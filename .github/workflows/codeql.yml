@@ -57,11 +57,15 @@ jobs:
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
-      if: contains(["csharp", "python", "ruby"], '${{matrix.language}}')
+      if: matrix.language == 'csharp' ||
+          matrix.language == 'python' ||
+          matrix.language == 'ruby'
       uses: github/codeql-action/autobuild@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
 
     - name: Custom build Setup Bazel
-      if: contains(["c-cpp", "java-kotlin", "swift"], '${{matrix.language}}')
+      if: matrix.language == 'c-cpp' ||
+          matrix.language == 'java-kotlin' ||
+          matrix.language == 'swift'
       uses: p0deje/setup-bazel@d7374da0723982b9ca047bb92d7c9e276795d80d # v0.2.0
       with:
         bazelisk-cache: true
@@ -76,7 +80,9 @@ jobs:
         repository-cache: true
 
     - name: Custom build
-      if: contains(["c-cpp", "java-kotlin", "swift"], '${{matrix.language}}')
+      if: matrix.language == 'c-cpp' ||
+          matrix.language == 'java-kotlin' ||
+          matrix.language == 'swift'
       run: bazel build
 
     - name: Perform CodeQL Analysis
