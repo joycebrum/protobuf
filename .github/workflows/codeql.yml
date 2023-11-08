@@ -47,6 +47,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
+    - name: Initialize submodules
+      run: git submodule update --init --recursive
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
@@ -57,33 +60,40 @@ jobs:
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
-      if: matrix.language == 'csharp' ||
-          matrix.language == 'python' ||
-          matrix.language == 'ruby'
+      # if: matrix.language == 'csharp' ||
+      #     matrix.language == 'python' ||
+      #     matrix.language == 'ruby'
       uses: github/codeql-action/autobuild@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
 
-    - name: Custom build Setup Bazel
-      if: matrix.language == 'c-cpp' ||
-          matrix.language == 'java-kotlin' ||
-          matrix.language == 'swift'
-      uses: p0deje/setup-bazel@d7374da0723982b9ca047bb92d7c9e276795d80d # v0.2.0
-      with:
-        bazelisk-cache: true
-        disk-cache: ${{ matrix.language }}-build
-        external-cache: |
-          name: ${{ matrix.language }}-build
-          manifest:
-            crates: rust/Cargo.Bazel.lock
-            npm: package-lock.json
-            pypi__pip: py/requirements_lock.txt
-            rules_ruby_dist: rb/ruby_version.bzl
-        repository-cache: true
+    # - name: Custom build Setup Bazel
+    #   if: matrix.language == 'c-cpp' ||
+    #       matrix.language == 'java-kotlin' ||
+    #       matrix.language == 'swift'
+    #   uses: p0deje/setup-bazel@d7374da0723982b9ca047bb92d7c9e276795d80d # v0.2.0
+    #   with:
+    #     bazelisk-cache: true
+    #     disk-cache: ${{ matrix.language }}-build
+    #     external-cache: |
+    #       name: ${{ matrix.language }}-build
+    #       manifest:
+    #         crates: rust/Cargo.Bazel.lock
+    #         npm: package-lock.json
+    #         pypi__pip: py/requirements_lock.txt
+    #         rules_ruby_dist: rb/ruby_version.bzl
+    #     repository-cache: true
 
-    - name: Custom build
-      if: matrix.language == 'c-cpp' ||
-          matrix.language == 'java-kotlin' ||
-          matrix.language == 'swift'
-      run: bazel build
+    # - name: Custom build c-cpp
+    #   if: matrix.language == 'c-cpp'
+    #   run: |
+    #     echo "Install bazel, git and g++"
+    #     sudo apt-get install g++ git bazel
+    #     bazel 
+
+    # - name: Custom build
+    #   if: matrix.language == 'c-cpp' ||
+    #       matrix.language == 'java-kotlin' ||
+    #       matrix.language == 'swift'
+    #   run: bazel build
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
