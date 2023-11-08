@@ -42,9 +42,6 @@ jobs:
       matrix:
         language: [ 'c-cpp', 'csharp', 'java-kotlin', 'python', 'ruby', 'swift' ]
         # CodeQL supports [ 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift' ]
-        # Use only 'java-kotlin' to analyze code written in Java, Kotlin or both
-        # Use only 'javascript-typescript' to analyze code written in JavaScript, TypeScript or both
-        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
 
     steps:
     - name: Checkout repository
@@ -55,28 +52,32 @@ jobs:
       uses: github/codeql-action/init@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
       with:
         languages: ${{ matrix.language }}
-        # If you wish to specify custom queries, you can do so here or in a config file.
-        # By default, queries listed here will override any specified in a config file.
-        # Prefix the list here with "+" to use these queries and those in the config file.
-
-        # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
-        # queries: security-extended,security-and-quality
 
 
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
+      if: contains(['csharp', 'python', 'ruby'], matrix.language)
       uses: github/codeql-action/autobuild@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
 
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
+    - name: Custom build Setup Bazel
+      if: contains(['c-cpp', 'java-kotlin', 'swift'], matrix.language)
+      uses: p0deje/setup-bazel@d7374da0723982b9ca047bb92d7c9e276795d80d # v0.2.0
+      with:
+        bazelisk-cache: true
+        disk-cache: ${{ matrix.language }}-build
+        external-cache: |
+          name: ${{ matrix.language }}-build
+          manifest:
+            crates: rust/Cargo.Bazel.lock
+            npm: package-lock.json
+            pypi__pip: py/requirements_lock.txt
+            rules_ruby_dist: rb/ruby_version.bzl
+        repository-cache: true
 
-    #   If the Autobuild fails above, remove it and uncomment the following three lines.
-    #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
-
-    # - run: |
-    #     echo "Run, Build Application using script"
-    #     ./location_of_script_within_repo/buildscript.sh
+    - name: Custom build
+      if: contains(['c-cpp', 'java-kotlin', 'swift'], matrix.language)
+      run: bazel build
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
