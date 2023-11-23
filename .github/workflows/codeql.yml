@@ -60,40 +60,24 @@ jobs:
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
-      # if: matrix.language == 'csharp' ||
-      #     matrix.language == 'python' ||
-      #     matrix.language == 'ruby'
+      if: matrix.language == 'c-cpp'  ||
+          matrix.language == 'csharp' ||
+          matrix.language == 'python' ||
+          matrix.language == 'ruby'   ||
+          matrix.language == 'swift'
       uses: github/codeql-action/autobuild@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
 
-    # - name: Custom build Setup Bazel
-    #   if: matrix.language == 'c-cpp' ||
-    #       matrix.language == 'java-kotlin' ||
-    #       matrix.language == 'swift'
-    #   uses: p0deje/setup-bazel@d7374da0723982b9ca047bb92d7c9e276795d80d # v0.2.0
-    #   with:
-    #     bazelisk-cache: true
-    #     disk-cache: ${{ matrix.language }}-build
-    #     external-cache: |
-    #       name: ${{ matrix.language }}-build
-    #       manifest:
-    #         crates: rust/Cargo.Bazel.lock
-    #         npm: package-lock.json
-    #         pypi__pip: py/requirements_lock.txt
-    #         rules_ruby_dist: rb/ruby_version.bzl
-    #     repository-cache: true
-
-    # - name: Custom build c-cpp
-    #   if: matrix.language == 'c-cpp'
-    #   run: |
-    #     echo "Install bazel, git and g++"
-    #     sudo apt-get install g++ git bazel
-    #     bazel 
-
-    # - name: Custom build
-    #   if: matrix.language == 'c-cpp' ||
-    #       matrix.language == 'java-kotlin' ||
-    #       matrix.language == 'swift'
-    #   run: bazel build
+    - name: Custom build java
+      if: matrix.language == 'java-kotlin'
+      run: |
+        echo "Install bazel and build deps"
+        sudo apt-get install g++ git bazel
+        echo "Build and install protoc"
+        bazel build :protoc :protobuf
+        cp bazel-bin/protoc /usr/local/bin
+        echo "Build Java"
+        mvn install
+        mvn package    
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
