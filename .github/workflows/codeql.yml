@@ -70,7 +70,7 @@ jobs:
     - name: Custom build java
       if: matrix.language == 'java-kotlin'
       run: |
-        echo "> Install bazel and build deps"
+        echo "> Install bazel"
         curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
         sudo mv bazel.gpg /etc/apt/trusted.gpg.d/
         echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
@@ -78,15 +78,12 @@ jobs:
         sudo apt-get install bazel
         echo "> Build and install protoc"
         bazel build :protoc :protobuf
-        cp bazel-bin/protoc /usr/local/bin
         echo "> Build Java"
-      # mvn install
-      # mvn package
 
     - name: Test java
       run: | 
-        cd java
-        mvn test
+        mvn install
+        mvn package
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
