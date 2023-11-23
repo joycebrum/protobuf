@@ -72,7 +72,7 @@ jobs:
       run: |
         echo "Install bazel and build deps"
         sudo apt-get install g++ git
-        sudo apt update && sudo apt install bazel
+        brew install bazelisk
         echo "Build and install protoc"
         bazel build :protoc :protobuf
         cp bazel-bin/protoc /usr/local/bin
