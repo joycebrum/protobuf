@@ -80,8 +80,12 @@ jobs:
         bazel build :protoc :protobuf
         cp bazel-bin/protoc /usr/local/bin
         echo "> Build Java"
-        mvn install
-        mvn package    
+      # mvn install
+      # mvn package
+
+    - name: Test java
+      run: | 
+        mvn test
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
