@@ -82,6 +82,7 @@ jobs:
 
     - name: Test java
       run: | 
+        cd java
         mvn install
         mvn package
 
