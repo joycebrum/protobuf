@@ -77,15 +77,15 @@ jobs:
         sudo apt-get update
         sudo apt-get install bazel
         echo "> Build and install protoc"
-        cd src
         bazel build :protoc :protobuf
         echo "> Build Java"
 
     - name: Test java
       run: | 
         cd java
-        mvn install
         mvn package
+    
+        # mvn install
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
