@@ -135,6 +135,7 @@ class MapValueConstRef;
 class MapValueRef;
 class MapIterator;
 class MapReflectionTester;
+class TextFormat;
 
 namespace internal {
 struct FuzzPeer;
@@ -369,7 +370,7 @@ class PROTOBUF_EXPORT Message : public MessageLite {
                                        internal::CachedSize* cached_size) const;
 
   // Reflection based version for reflection based types.
-  static void MergeImpl(Message& to, const Message& from);
+  static void MergeImpl(MessageLite& to, const MessageLite& from);
 
   static const DescriptorMethods kDescriptorMethods;
 
@@ -1010,6 +1011,7 @@ class PROTOBUF_EXPORT Reflection final {
     return schema_.IsSplit(field);
   }
 
+  friend class google::protobuf::TextFormat;
   friend class FastReflectionBase;
   friend class FastReflectionMessageMutator;
   friend bool internal::IsDescendant(Message& root, const Message& message);

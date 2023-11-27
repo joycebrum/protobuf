@@ -60,6 +60,10 @@ void PrintEnumVerifierLogic(
     absl::string_view var_name, absl::string_view terminating_string,
     bool enforce_lite);
 
+// Prints the Protobuf Java Version validator checking that the runtime and
+// gencode versions are compatible.
+void PrintGencodeVersionValidator(io::Printer* printer);
+
 // Converts a name to camel-case. If cap_first_letter is true, capitalize the
 // first letter.
 std::string ToCamelCase(absl::string_view input, bool lower_first);
@@ -338,13 +342,6 @@ bool IsRealOneof(const FieldDescriptor* descriptor);
 
 inline bool HasHasbit(const FieldDescriptor* descriptor) {
   return internal::cpp::HasHasbit(descriptor);
-}
-
-// Whether generate classes expose public PARSER instances.
-inline bool ExposePublicParser(const FileDescriptor* descriptor) {
-  // TODO: Mark the PARSER private in 3.1.x releases.
-  return FileDescriptorLegacy(descriptor).syntax() ==
-         FileDescriptorLegacy::Syntax::SYNTAX_PROTO2;
 }
 
 // Whether unknown enum values are kept (i.e., not stored in UnknownFieldSet

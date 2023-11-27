@@ -290,7 +290,6 @@ set(libprotoc_srcs
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/allowlists/editions.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/allowlists/empty_package.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/allowlists/open_enum.cc
-  ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/allowlists/unused_imports.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/code_generator.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/command_line_interface.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/cpp/enum.cc
@@ -385,6 +384,7 @@ set(libprotoc_srcs
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/retention.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/ruby/ruby_generator.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/accessors/accessors.cc
+  ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/accessors/helpers.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/accessors/map.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/accessors/repeated_scalar.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/accessors/singular_message.cc
@@ -398,6 +398,7 @@ set(libprotoc_srcs
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/oneof.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/relative_path.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/subprocess.cc
+  ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/versions.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/zip_writer.cc
 )
 
@@ -502,6 +503,7 @@ set(libprotoc_hdrs
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/ruby/ruby_generator.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/accessors/accessor_generator.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/accessors/accessors.h
+  ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/accessors/helpers.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/context.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/generator.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/rust/message.h
@@ -511,7 +513,6 @@ set(libprotoc_hdrs
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/scc.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/subprocess.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/versions.h
-  ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/versions_suffix.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/zip_writer.h
 )
 
@@ -797,6 +798,7 @@ set(compiler_test_files
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/python/plugin_unittest.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/retention_unittest.cc
   ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/ruby/ruby_generator_unittest.cc
+  ${protobuf_SOURCE_DIR}/src/google/protobuf/compiler/versions_test.cc
 )
 
 # @//src/google/protobuf/compiler:test_proto_srcs

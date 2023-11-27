@@ -261,7 +261,10 @@ rust_test(
         # TODO: Enable testing on arm once we support sanitizers for Rust on Arm.
         "not_build:arm",
     ],
-    deps = ["//rust/test:nested_cc_rust_proto"],
+    deps = [
+        "@crate_index//:googletest",
+        "//rust/test:nested_cc_rust_proto",
+    ],
 )
 
 rust_test(
@@ -271,7 +274,26 @@ rust_test(
         # TODO: Enable testing on arm once we support sanitizers for Rust on Arm.
         "not_build:arm",
     ],
-    deps = ["//rust/test:nested_upb_rust_proto"],
+    deps = [
+        "@crate_index//:googletest",
+        "//rust/test:nested_upb_rust_proto",
+    ],
+)
+
+rust_test(
+    name = "accessors_map_cpp_test",
+    srcs = ["accessors_map_test.rs"],
+    proc_macro_deps = [
+        "@crate_index//:paste",
+    ],
+    tags = [
+        # TODO: Enable testing on arm once we support sanitizers for Rust on Arm.
+        "not_build:arm",
+    ],
+    deps = [
+        "@crate_index//:googletest",
+        "//rust/test:map_unittest_cc_rust_proto",
+    ],
 )
 
 rust_test(
@@ -279,6 +301,10 @@ rust_test(
     srcs = ["accessors_map_test.rs"],
     proc_macro_deps = [
         "@crate_index//:paste",
+    ],
+    tags = [
+        # TODO: Enable testing on arm once we support sanitizers for Rust on Arm.
+        "not_build:arm",
     ],
     deps = [
         "@crate_index//:googletest",

@@ -15,6 +15,7 @@
 #include <iterator>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/log/absl_check.h"
@@ -429,6 +430,10 @@ bool ShouldForceAllocationOnConstruction(const Descriptor* desc,
 // Returns true if the message is present based on PDProto profile.
 bool IsPresentMessage(const Descriptor* descriptor, const Options& options);
 
+// Returns the most likely present field. Returns nullptr if not profile driven.
+const FieldDescriptor* FindHottestField(
+    const std::vector<const FieldDescriptor*>& fields, const Options& options);
+
 // Does the file contain any definitions that need extension_set.h?
 bool HasExtensionsOrExtendableMessage(const FileDescriptor* file);
 
@@ -623,6 +628,9 @@ inline std::vector<const Descriptor*> FlattenMessagesInFile(
   FlattenMessagesInFile(file, &result);
   return result;
 }
+
+std::vector<const Descriptor*> TopologicalSortMessagesInFile(
+    const FileDescriptor* file, MessageSCCAnalyzer& scc_analyzer);
 
 template <typename F>
 void ForEachMessage(const Descriptor* descriptor, F&& func) {

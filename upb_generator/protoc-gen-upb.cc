@@ -74,7 +74,6 @@ std::string EnumMiniTableRef(upb::EnumDefPtr descriptor,
 
 std::string ExtensionIdentBase(upb::FieldDefPtr ext) {
   assert(ext.is_extension());
-  std::string ext_scope;
   if (ext.extension_scope()) {
     return MessageName(ext.extension_scope());
   } else {
@@ -283,7 +282,7 @@ void GenerateExtensionInHeader(const DefPoolPair& pools, upb::FieldDefPtr ext,
         R"cc(
           UPB_INLINE $0 $1_$2(const struct $3* msg) {
             const upb_MiniTableExtension* ext = &$4;
-            UPB_ASSUME(!upb_IsRepeatedOrMap(&ext->field));
+            UPB_ASSUME(!upb_MiniTableField_IsRepeatedOrMap(&ext->field));
             UPB_ASSUME(_upb_MiniTableField_GetRep(&ext->field) == $5);
             $0 default_val = $6;
             $0 ret;
@@ -298,7 +297,7 @@ void GenerateExtensionInHeader(const DefPoolPair& pools, upb::FieldDefPtr ext,
         R"cc(
           UPB_INLINE void $1_set_$2(struct $3* msg, $0 val, upb_Arena* arena) {
             const upb_MiniTableExtension* ext = &$4;
-            UPB_ASSUME(!upb_IsRepeatedOrMap(&ext->field));
+            UPB_ASSUME(!upb_MiniTableField_IsRepeatedOrMap(&ext->field));
             UPB_ASSUME(_upb_MiniTableField_GetRep(&ext->field) == $5);
             bool ok = _upb_Message_SetExtensionField(msg, ext, &val, arena);
             UPB_ASSERT(ok);

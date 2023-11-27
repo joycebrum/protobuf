@@ -33,6 +33,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/log/absl_check.h"
+#include "absl/meta/type_traits.h"
 #include "google/protobuf/arena.h"
 #include "google/protobuf/internal_visibility.h"
 #include "google/protobuf/message_lite.h"
@@ -71,11 +72,6 @@ class RepeatedPtrOverPtrsIterator;
 }  // namespace internal
 
 namespace internal {
-
-template <typename Element>
-inline void* NewT(Arena* a) {
-  return GenericTypeHandler<Element>::New(a);
-}
 
 // Swaps two non-overlapping blocks of memory of size `N`
 template <size_t N>
@@ -117,15 +113,10 @@ struct TypeImplementsMergeBehaviorProbeForMergeFrom {
       type;
 };
 
-template <typename T, typename = void>
-struct TypeImplementsMergeBehavior
-    : TypeImplementsMergeBehaviorProbeForMergeFrom<T> {};
-
-
-template <>
-struct TypeImplementsMergeBehavior<std::string> {
-  typedef std::true_type type;
-};
+template <typename T>
+using TypeImplementsMergeBehavior =
+    absl::disjunction<std::is_same<T, std::string>,
+                      TypeImplementsMergeBehaviorProbeForMergeFrom<T>>;
 
 template <typename T>
 struct IsMovable
@@ -229,7 +220,7 @@ class PROTOBUF_EXPORT RepeatedPtrFieldBase {
 
   template <typename Handler>
   Value<Handler>* Add() {
-    return cast<Handler>(AddOutOfLineHelper(NewT<Value<Handler>>));
+    return cast<Handler>(AddOutOfLineHelper(Handler::GetNewFunc()));
   }
 
   template <
@@ -247,19 +238,13 @@ class PROTOBUF_EXPORT RepeatedPtrFieldBase {
     element_at(ExchangeCurrentSize(current_size_ + 1)) = result;
   }
 
-  template <typename TypeHandler>
-  void Delete(int index) {
-    ABSL_DCHECK_GE(index, 0);
-    ABSL_DCHECK_LT(index, current_size_);
-    using H = CommonHandler<TypeHandler>;
-    Delete<H>(element_at(index), arena_);
-  }
-
   // Must be called from destructor.
+  //
+  // Pre-condition: NeedsDestroy() returns true.
   template <typename TypeHandler>
   void Destroy() {
+    ABSL_DCHECK(NeedsDestroy());
     using H = CommonHandler<TypeHandler>;
-    if (arena_ != nullptr) return;
     int n = allocated_size();
     void** elems = elements();
     for (int i = 0; i < n; i++) {
@@ -272,7 +257,10 @@ class PROTOBUF_EXPORT RepeatedPtrFieldBase {
   }
 
   bool NeedsDestroy() const {
-    return tagged_rep_or_elem_ != nullptr && arena_ == nullptr;
+    // TODO: arena check is redundant once all `RepeatedPtrField`s
+    // with non-null arena are owned by the arena.
+    return tagged_rep_or_elem_ != nullptr &&
+           PROTOBUF_PREDICT_FALSE(arena_ == nullptr);
   }
   void DestroyProtos();  // implemented in the cc file
 
@@ -304,17 +292,11 @@ class PROTOBUF_EXPORT RepeatedPtrFieldBase {
     }
   }
 
-  // Message creating functor: used in MergeFrom<T>()
-  template <typename T>
-  static MessageLite* CopyMessage(Arena* arena, const MessageLite& src) {
-    return Arena::CreateMaybeMessage<T>(arena, static_cast<const T&>(src));
-  }
-
   // Appends all message values from `from` to this instance.
   template <typename T>
   void MergeFrom(const RepeatedPtrFieldBase& from) {
     static_assert(std::is_base_of<MessageLite, T>::value, "");
-    MergeFromConcreteMessage(from, CopyMessage<T>);
+    MergeFromConcreteMessage(from, Arena::CopyConstruct<T>);
   }
 
   inline void InternalSwap(RepeatedPtrFieldBase* PROTOBUF_RESTRICT rhs) {
@@ -641,7 +623,9 @@ class PROTOBUF_EXPORT RepeatedPtrFieldBase {
     }
     this->CopyFrom<TypeHandler>(*other);
     other->InternalSwap(&temp);
-    temp.Destroy<TypeHandler>();  // Frees rep_ if `other` had no arena.
+    if (temp.NeedsDestroy()) {
+      temp.Destroy<TypeHandler>();
+    }
   }
 
   // Gets the Arena on which this RepeatedPtrField stores its elements.
@@ -693,7 +677,7 @@ class PROTOBUF_EXPORT RepeatedPtrFieldBase {
   // This follows the `Arena::CreateMaybeMessage` signature so that the compiler
   // can have the inlined call into the out of line copy function(s) simply pass
   // the address of `Arena::CreateMaybeMessage` 'as is'.
-  using CopyFn = MessageLite* (*)(Arena*, const MessageLite&);
+  using CopyFn = void* (*)(Arena*, const void*);
 
   struct Rep {
     int allocated_size;
@@ -891,8 +875,10 @@ class GenericTypeHandler {
   typedef GenericType Type;
   using Movable = IsMovable<GenericType>;
 
+  static constexpr auto GetNewFunc() { return Arena::DefaultConstruct<Type>; }
+
   static inline GenericType* New(Arena* arena) {
-    return Arena::CreateMaybeMessage<Type>(arena);
+    return static_cast<GenericType*>(Arena::DefaultConstruct<Type>(arena));
   }
   static inline GenericType* New(Arena* arena, GenericType&& value) {
     return Arena::Create<GenericType>(arena, std::move(value));
@@ -951,14 +937,6 @@ template <>
 PROTOBUF_EXPORT void GenericTypeHandler<MessageLite>::Merge(
     const MessageLite& from, MessageLite* to);
 
-template <>
-inline void GenericTypeHandler<std::string>::Clear(std::string* value) {
-  value->clear();
-}
-template <>
-void GenericTypeHandler<std::string>::Merge(const std::string& from,
-                                            std::string* to);
-
 // Message specialization bodies defined in message.cc. This split is necessary
 // to allow proto2-lite (which includes this header) to be independent of
 // Message.
@@ -968,10 +946,15 @@ PROTOBUF_EXPORT Message* GenericTypeHandler<Message>::NewFromPrototype(
 template <>
 PROTOBUF_EXPORT Arena* GenericTypeHandler<Message>::GetArena(Message* value);
 
-class StringTypeHandler {
+PROTOBUF_EXPORT void* NewStringElement(Arena* arena);
+
+template <>
+class GenericTypeHandler<std::string> {
  public:
   typedef std::string Type;
   using Movable = IsMovable<Type>;
+
+  static constexpr auto GetNewFunc() { return NewStringElement; }
 
   static PROTOBUF_NOINLINE std::string* New(Arena* arena) {
     return Arena::Create<std::string>(arena);
@@ -1057,12 +1040,13 @@ class RepeatedPtrField final : private internal::RepeatedPtrFieldBase {
                 Element, decltype(*std::declval<Iter>())>::value>::type>
   RepeatedPtrField(Iter begin, Iter end);
 
-  RepeatedPtrField(const RepeatedPtrField& other)
-      : RepeatedPtrField(nullptr, other) {}
+  RepeatedPtrField(const RepeatedPtrField& rhs)
+      : RepeatedPtrField(nullptr, rhs) {}
   RepeatedPtrField& operator=(const RepeatedPtrField& other)
       ABSL_ATTRIBUTE_LIFETIME_BOUND;
 
-  RepeatedPtrField(RepeatedPtrField&& other) noexcept;
+  RepeatedPtrField(RepeatedPtrField&& rhs) noexcept
+      : RepeatedPtrField(nullptr, std::move(rhs)) {}
   RepeatedPtrField& operator=(RepeatedPtrField&& other) noexcept
       ABSL_ATTRIBUTE_LIFETIME_BOUND;
 
@@ -1333,9 +1317,10 @@ class RepeatedPtrField final : private internal::RepeatedPtrFieldBase {
   friend struct WeakRepeatedPtrField;
 
   // Note:  RepeatedPtrField SHOULD NOT be subclassed by users.
-  class TypeHandler;
+  using TypeHandler = internal::GenericTypeHandler<Element>;
 
   RepeatedPtrField(Arena* arena, const RepeatedPtrField& rhs);
+  RepeatedPtrField(Arena* arena, RepeatedPtrField&& rhs);
 
 
   // Implementations for ExtractSubrange(). The copying behavior must be
@@ -1355,14 +1340,6 @@ class RepeatedPtrField final : private internal::RepeatedPtrFieldBase {
 // -------------------------------------------------------------------
 
 template <typename Element>
-class RepeatedPtrField<Element>::TypeHandler
-    : public internal::GenericTypeHandler<Element> {};
-
-template <>
-class RepeatedPtrField<std::string>::TypeHandler
-    : public internal::StringTypeHandler {};
-
-template <typename Element>
 constexpr RepeatedPtrField<Element>::RepeatedPtrField()
     : RepeatedPtrFieldBase() {
   StaticValidityCheck();
@@ -1373,7 +1350,7 @@ inline RepeatedPtrField<Element>::RepeatedPtrField(Arena* arena)
     : RepeatedPtrFieldBase(arena) {
   // We can't have StaticValidityCheck here because that requires Element to be
   // a complete type, and in split repeated fields cases, we call
-  // CreateMaybeMessage<RepeatedPtrField<T>> for incomplete Ts.
+  // CreateMessage<RepeatedPtrField<T>> for incomplete Ts.
 }
 
 template <typename Element>
@@ -1394,12 +1371,13 @@ inline RepeatedPtrField<Element>::RepeatedPtrField(Iter begin, Iter end) {
 template <typename Element>
 RepeatedPtrField<Element>::~RepeatedPtrField() {
   StaticValidityCheck();
+  if (!NeedsDestroy()) return;
 #ifdef __cpp_if_constexpr
   if constexpr (std::is_base_of<MessageLite, Element>::value) {
 #else
   if (std::is_base_of<MessageLite, Element>::value) {
 #endif
-    if (NeedsDestroy()) DestroyProtos();
+    DestroyProtos();
   } else {
     Destroy<TypeHandler>();
   }
@@ -1413,19 +1391,18 @@ inline RepeatedPtrField<Element>& RepeatedPtrField<Element>::operator=(
 }
 
 template <typename Element>
-inline RepeatedPtrField<Element>::RepeatedPtrField(
-    RepeatedPtrField&& other) noexcept
-    : RepeatedPtrField() {
+inline RepeatedPtrField<Element>::RepeatedPtrField(Arena* arena,
+                                                   RepeatedPtrField&& rhs)
+    : RepeatedPtrField(arena) {
 #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
-  CopyFrom(other);
+  CopyFrom(rhs);
 #else   // PROTOBUF_FORCE_COPY_IN_MOVE
-  // We don't just call Swap(&other) here because it would perform 3 copies if
-  // other is on an arena. This field can't be on an arena because arena
-  // construction always uses the Arena* accepting constructor.
-  if (other.GetArena()) {
-    CopyFrom(other);
+  // We don't just call Swap(&rhs) here because it would perform 3 copies if rhs
+  // is on a different arena.
+  if (arena != rhs.GetArena()) {
+    CopyFrom(rhs);
   } else {
-    InternalSwap(&other);
+    InternalSwap(&rhs);
   }
 #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
 }
@@ -1863,6 +1840,17 @@ class RepeatedPtrIterator {
   void* const* it_;
 };
 
+template <typename Traits, typename = void>
+struct IteratorConceptSupport {
+  using tag = typename Traits::iterator_category;
+};
+
+template <typename Traits>
+struct IteratorConceptSupport<Traits,
+                              absl::void_t<typename Traits::iterator_concept>> {
+  using tag = typename Traits::iterator_concept;
+};
+
 // Provides an iterator that operates on pointers to the underlying objects
 // rather than the objects themselves as RepeatedPtrIterator does.
 // Consider using this when working with stl algorithms that change
@@ -1872,13 +1860,19 @@ class RepeatedPtrIterator {
 // iterator, or "const void* const" for a constant iterator.
 template <typename Element, typename VoidPtr>
 class RepeatedPtrOverPtrsIterator {
+ private:
+  using traits =
+      std::iterator_traits<typename std::remove_const<Element>::type*>;
+
  public:
-  using iterator = RepeatedPtrOverPtrsIterator<Element, VoidPtr>;
-  using iterator_category = std::random_access_iterator_tag;
-  using value_type = typename std::remove_const<Element>::type;
-  using difference_type = std::ptrdiff_t;
+  using value_type = typename traits::value_type;
+  using difference_type = typename traits::difference_type;
   using pointer = Element*;
   using reference = Element&;
+  using iterator_category = typename traits::iterator_category;
+  using iterator_concept = typename IteratorConceptSupport<traits>::tag;
+
+  using iterator = RepeatedPtrOverPtrsIterator<Element, VoidPtr>;
 
   RepeatedPtrOverPtrsIterator() : it_(nullptr) {}
   explicit RepeatedPtrOverPtrsIterator(VoidPtr* it) : it_(it) {}

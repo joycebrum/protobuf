@@ -68,14 +68,6 @@ def protobuf_deps():
             build_file = Label("//:third_party/jsoncpp.BUILD"),
         )
 
-    if not native.existing_rule("utf8_range"):
-        _github_archive(
-            name = "utf8_range",
-            repo = "https://github.com/protocolbuffers/utf8_range",
-            commit = "0e378bdb224cc8d4653b0db963b474839c2bb43c",
-            sha256 = "9b8db33325e5b6105c04369cd04dbbd9186e0577141543714243e66b8f045664",
-        )
-
     if not native.existing_rule("rules_cc"):
         _github_archive(
             name = "rules_cc",
@@ -107,14 +99,6 @@ def protobuf_deps():
             sha256 = "9d04041ac92a0985e344235f5d946f71ac543f1b1565f2cdbc9a2aaee8adf55b",
             strip_prefix = "rules_python-0.26.0",
             url = "https://github.com/bazelbuild/rules_python/releases/download/0.26.0/rules_python-0.26.0.tar.gz",
-        )
-
-    if not native.existing_rule("rules_ruby"):
-        _github_archive(
-            name = "rules_ruby",
-            repo = "https://github.com/protocolbuffers/rules_ruby",
-            commit = "b7f3e9756f3c45527be27bc38840d5a1ba690436",
-            sha256 = "347927fd8de6132099fcdc58e8f7eab7bde4eb2fd424546b9cd4f1c6f8f8bad8",
         )
 
     if not native.existing_rule("rules_jvm_external"):

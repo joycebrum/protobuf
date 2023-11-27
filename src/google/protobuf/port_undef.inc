@@ -40,8 +40,6 @@
 #undef PROTOBUF_MINIMUM_EDITION
 #undef PROTOBUF_MAXIMUM_EDITION
 #undef PROTOBUF_FIELD_OFFSET
-#undef PROTOBUF_MIN_HEADER_VERSION_FOR_PROTOC
-#undef PROTOBUF_MIN_PROTOC_VERSION
 #undef PROTOBUF_PREDICT_TRUE
 #undef PROTOBUF_PREDICT_FALSE
 #undef PROTOBUF_EXPORT
@@ -80,6 +78,7 @@
 #undef PROTOBUF_TSAN_WRITE
 #undef PROTOBUF_USE_TABLE_PARSER_ON_REFLECTION
 #undef PROTOBUF_BUILTIN_CONSTANT_P
+#undef PROTOBUF_PREFETCH_PARSE_TABLE
 #undef PROTOBUF_TC_PARAM_DECL
 #undef PROTOBUF_DEBUG
 #undef PROTO2_IS_OSS
@@ -92,6 +91,11 @@
 #endif
 
 // Restore macros that may have been #undef'd in port_def.inc.
+
+#ifdef PROTOBUF_DID_UNDEF_noreturn
+#pragma pop_macro("noreturn")
+#undef PROTOBUF_DID_UNDEF_noreturn
+#endif
 
 #ifdef PROTOBUF_DID_UNDEF_PACKAGE
 #pragma pop_macro("PACKAGE")

@@ -426,6 +426,20 @@ def build_targets(name):
         text_format_failure_list = "//conformance:text_format_failure_list_python_cpp.txt",
     )
 
+    conformance_test(
+        name = "conformance_test_upb",
+        env = {"PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": "upb"},
+        failure_list = "//conformance:failure_list_python_upb.txt",
+        target_compatible_with = select({
+            "@system_python//:none": ["@platforms//:incompatible"],
+            ":use_fast_cpp_protos": ["@platforms//:incompatible"],
+            "//conditions:default": [],
+        }),
+        maximum_edition = "2023",
+        testee = "//conformance:conformance_python",
+        text_format_failure_list = "//conformance:text_format_failure_list_python_upb.txt",
+    )
+
     ################################################################################
     # Distribution files
     ################################################################################
@@ -437,7 +451,6 @@ def build_targets(name):
             "README.md",
             "google/__init__.py",
             "setup.cfg",
-            "tox.ini",
         ],
         strip_prefix = "",
         visibility = ["//python/dist:__pkg__"],
@@ -463,7 +476,6 @@ def build_targets(name):
             "python_version_test.py",
             "setup.cfg",
             "setup.py",
-            "tox.ini",
         ],
         strip_prefix = strip_prefix.from_root(""),
         visibility = ["//pkg:__pkg__"],

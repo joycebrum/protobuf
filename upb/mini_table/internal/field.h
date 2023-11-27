@@ -8,9 +8,11 @@
 #ifndef UPB_MINI_TABLE_INTERNAL_FIELD_H_
 #define UPB_MINI_TABLE_INTERNAL_FIELD_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "upb/base/descriptor_constants.h"
+#include "upb/mini_table/internal/size_log2.h"
 
 // Must be last.
 #include "upb/port/def.inc"
@@ -95,14 +97,10 @@ UPB_INLINE void _upb_MiniTableField_CheckIsMap(
   UPB_ASSUME(field->presence == 0);
 }
 
-UPB_INLINE bool upb_IsRepeatedOrMap(const struct upb_MiniTableField* field) {
-  // This works because upb_FieldMode has no value 3.
-  return !(field->mode & kUpb_FieldMode_Scalar);
-}
-
-UPB_INLINE bool upb_IsSubMessage(const struct upb_MiniTableField* field) {
-  return field->UPB_PRIVATE(descriptortype) == kUpb_FieldType_Message ||
-         field->UPB_PRIVATE(descriptortype) == kUpb_FieldType_Group;
+UPB_INLINE size_t
+_upb_MiniTableField_ElemSizeLg2(const struct upb_MiniTableField* field) {
+  return upb_FieldType_SizeLg2(
+      (upb_FieldType)field->UPB_PRIVATE(descriptortype));
 }
 
 #ifdef __cplusplus
