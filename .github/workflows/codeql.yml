@@ -59,15 +59,17 @@ jobs:
     - name: Custom build protoc (C++) and build java
       if: matrix.language == 'java-kotlin'
       run: |
-        echo "> Install bazel"
+        echo "Installing bazel"
         curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
         sudo mv bazel.gpg /etc/apt/trusted.gpg.d/
         echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
         sudo apt-get update
         sudo apt-get install bazel
-        echo "> Build and install protoc"
+        echo "Building protoc"
         bazel build :protoc :protobuf
         mv bazel-bin/protoc protoc
+        echo "Building Java"
+        cd java
         mvn clean package -f pom.xml -B -V -e -Dfindbugs.skip -Dcheckstyle.skip -Dpmd.skip=true -Dspotbugs.skip -Denforcer.skip -Dmaven.javadoc.skip -DskipTests -Dmaven.test.skip=true -Dlicense.skip=true -Drat.skip=true -Dspotless.check.skip=true
 
 
