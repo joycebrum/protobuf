@@ -55,6 +55,10 @@ jobs:
       uses: github/codeql-action/init@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
       with:
         languages: ${{ matrix.language }}
+  
+    - name: LS before
+      run: |
+        ls
 
     - name: Custom build protoc (C++) for Java Build
       if: matrix.language == 'java-kotlin'
@@ -67,7 +71,10 @@ jobs:
         sudo apt-get install bazel
         echo "> Build and install protoc"
         bazel build :protoc :protobuf
-        mv protoc-linux-x86_64 protoc
+
+    - name: LS after
+      run: |
+        ls
 
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
     # If this step fails, then you should remove it and run the build manually (see below)
