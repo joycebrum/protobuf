@@ -79,7 +79,7 @@ jobs:
           matrix.language == 'swift'
       uses: github/codeql-action/autobuild@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
       with:
-        working-directory: 'java'
+        working-directory: './java'
 
         
     - name: Perform CodeQL Analysis
