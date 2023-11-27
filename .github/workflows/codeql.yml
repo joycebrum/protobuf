@@ -55,9 +55,10 @@ jobs:
       uses: github/codeql-action/init@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
       with:
         languages: ${{ matrix.language }}
-  
-    - name: Custom build protoc (C++) and build java
-      if: matrix.language == 'java-kotlin'
+
+    - name: Custom build C++
+      if: matrix.language == 'c-cpp' ||
+          matrix.language == 'java-kotlin'
       run: |
         echo "Installing bazel"
         curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
@@ -68,7 +69,10 @@ jobs:
         echo "Building protoc"
         bazel build :protoc :protobuf
         mv bazel-bin/protoc protoc
-        echo "Building Java"
+  
+    - name: Custom build Java
+      if: matrix.language == 'java-kotlin'
+      run: |
         cd java
         mvn clean package -f pom.xml -B -V -e -Dfindbugs.skip -Dcheckstyle.skip -Dpmd.skip=true -Dspotbugs.skip -Denforcer.skip -Dmaven.javadoc.skip -DskipTests -Dmaven.test.skip=true -Dlicense.skip=true -Drat.skip=true -Dspotless.check.skip=true
 
@@ -76,8 +80,7 @@ jobs:
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
-      if: matrix.language == 'c-cpp'  ||
-          matrix.language == 'csharp' ||
+      if: matrix.language == 'csharp' ||
           matrix.language == 'python' ||
           matrix.language == 'ruby'
       uses: github/codeql-action/autobuild@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
