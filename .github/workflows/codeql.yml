@@ -77,7 +77,7 @@ jobs:
       if: matrix.language == 'c-cpp'  ||
           matrix.language == 'csharp' ||
           matrix.language == 'python' ||
-          matrix.language == 'ruby'   ||
+          matrix.language == 'ruby'
       uses: github/codeql-action/autobuild@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
       with:
         working-directory: './java'
