@@ -56,10 +56,6 @@ jobs:
       with:
         languages: ${{ matrix.language }}
   
-    - name: LS before
-      run: |
-        ls
-
     - name: Custom build protoc (C++) for Java Build
       if: matrix.language == 'java-kotlin'
       run: |
@@ -74,7 +70,8 @@ jobs:
 
     - name: LS after
       run: |
-        ls
+        cd bazel-bin
+        ls 
 
     # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
     # If this step fails, then you should remove it and run the build manually (see below)
