@@ -56,18 +56,7 @@ jobs:
       with:
         languages: ${{ matrix.language }}
 
-
-    # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
-    # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      if: matrix.language == 'c-cpp'  ||
-          matrix.language == 'csharp' ||
-          matrix.language == 'python' ||
-          matrix.language == 'ruby'   ||
-          matrix.language == 'swift'
-      uses: github/codeql-action/autobuild@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
-
-    - name: Custom build java
+    - name: Custom build protoc (C++) for Java Build
       if: matrix.language == 'java-kotlin'
       run: |
         echo "> Install bazel"
@@ -78,15 +67,19 @@ jobs:
         sudo apt-get install bazel
         echo "> Build and install protoc"
         bazel build :protoc :protobuf
-        echo "> Build Java"
 
-    - name: Test java
-      run: | 
-        cd java
-        mvn package
-    
-        # mvn install
+    # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
+    # If this step fails, then you should remove it and run the build manually (see below)
+    - name: Autobuild
+      if: matrix.language == 'c-cpp'  ||
+          matrix.language == 'csharp' ||
+          matrix.language == 'python' ||
+          matrix.language == 'ruby'   ||
+          matrix.language == 'java-kotlin'   ||
+          matrix.language == 'swift'
+      uses: github/codeql-action/autobuild@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
 
+        
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
       with:
