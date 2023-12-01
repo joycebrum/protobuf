@@ -43,7 +43,6 @@ jobs:
       uses: github/codeql-action/init@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
       with:
         languages: ${{ matrix.language }}
-        config-file: ./.github/codeql-config.yml
   
     - name: Custom build protoc (C++) and build java
       if: matrix.language == 'java-kotlin'
@@ -73,3 +72,19 @@ jobs:
       uses: github/codeql-action/analyze@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
       with:
         category: "/language:${{matrix.language}}"
+        upload: false
+        output: sarif-results
+
+    - name: filter-sarif
+      uses: advanced-security/filter-sarif@bc96d9fb9338c5b48cc440b1b4d0a350b26a20db # v1.0.0
+      with:
+         # filter out all test files unless they contain a sql-injection vulnerability
+        patterns: |
+          -third_pary
+        input: sarif-results/${{ matrix.language }}.sarif
+        output: sarif-results/${{ matrix.language }}.sarif
+
+    - name: Upload SARIF
+      uses: github/codeql-action/upload-sarif@74483a38d39275f33fcff5f35b679b5ca4a26a99 # v2.22.5
+      with:
+        sarif_file: sarif-results/${{ matrix.language }}.sarif
