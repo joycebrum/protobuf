@@ -75,27 +75,22 @@ jobs:
         upload: false
         output: sarif-results
 
-    - name: Filter SARIF C and C++
-      if: matrix.language == 'c-cpp'
-      uses: advanced-security/filter-sarif@bc96d9fb9338c5b48cc440b1b4d0a350b26a20db # v1.0.0
-      with:
-         # filter out all test files unless they contain a sql-injection vulnerability
-        patterns: |
-          -third_pary
-        input: sarif-results/c.sarif
-        output: sarif-results/${{ matrix.language }}.sarif
-
-    - name: See files
-      run: ls sarif-results/
+    - name: Rename sarif-results file
+      run: |
+        mv sarif-results/cpp.sarif sarif-results/${{ matrix.language }} 2>/dev/null
+        mv sarif-results/java.sarif sarif-results/${{ matrix.language }} 2>/dev/null
+        ls sarif-results/
+        
 
     - name: Filter SARIF Java and Kotlin
-      if: matrix.language == 'java-kotlin'
+      if: matrix.language == 'java-kotlin' ||
+          matrix.language == 'c-cpp'
       uses: advanced-security/filter-sarif@bc96d9fb9338c5b48cc440b1b4d0a350b26a20db # v1.0.0
       with:
          # filter out all test files unless they contain a sql-injection vulnerability
         patterns: |
           -third_pary
-        input: sarif-results/java.sarif
+        input: sarif-results/${{ matrix.language }}.sarif
         output: sarif-results/${{ matrix.language }}.sarif
         
     - name: Upload SARIF
