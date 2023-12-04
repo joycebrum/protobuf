@@ -75,11 +75,15 @@ jobs:
         upload: false
         output: sarif-results
 
-    - name: Rename sarif-results file
+    - name: Set FILENAME
       run: |
-        mv sarif-results/cpp.sarif sarif-results/${{ matrix.language }} 2>/dev/null
-        mv sarif-results/java.sarif sarif-results/${{ matrix.language }} 2>/dev/null
-        ls sarif-results/
+        if [[ ${{ matrix.language }} == 'java-kotlin' ]]; then
+          echo "FILENAME=java" >> $GITHUB_ENV
+        elif [[ ${{ matrix.language }} == 'c-cpp' ]]; then
+          echo "FILENAME=cpp" >> $GITHUB_ENV
+        else
+          echo "FILENAME=${{matrix.language}}" >> $GITHUB_ENV
+        fi
         
 
     - name: Filter SARIF Java and Kotlin
@@ -90,7 +94,7 @@ jobs:
          # filter out all test files unless they contain a sql-injection vulnerability
         patterns: |
           -third_pary
-        input: sarif-results/${{ matrix.language }}.sarif
+        input: sarif-results/$FILENAME.sarif
         output: sarif-results/${{ matrix.language }}.sarif
         
     - name: Upload SARIF
