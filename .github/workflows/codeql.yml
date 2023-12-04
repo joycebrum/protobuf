@@ -85,6 +85,9 @@ jobs:
         input: sarif-results/c.sarif
         output: sarif-results/${{ matrix.language }}.sarif
 
+    - name: See files
+      run: ls sarif-results/
+
     - name: Filter SARIF Java and Kotlin
       if: matrix.language == 'java-kotlin'
       uses: advanced-security/filter-sarif@bc96d9fb9338c5b48cc440b1b4d0a350b26a20db # v1.0.0
